@@ -305,21 +305,44 @@ def generate_cinematic_script_via_chatgpt(
     try:
         log.info("🎬 [Phase 1/2] Analyzing Master Drama Dossier & Character Roster across %d dialogues...", len(segments))
 
+        # Build CAM++ biometric cluster summary statistics
+        cluster_stats: dict[str, dict[str, Any]] = {}
+        for s in segments:
+            cid = s.get("speaker_cluster", "spk_0")
+            if cid not in cluster_stats:
+                cluster_stats[cid] = {"count": 0, "pitches": [], "genders": set()}
+            cluster_stats[cid]["count"] += 1
+            if s.get("pitch_hz", 0) > 0:
+                cluster_stats[cid]["pitches"].append(s["pitch_hz"])
+            if s.get("audio_gender") in ["male", "female"]:
+                cluster_stats[cid]["genders"].add(s["audio_gender"])
+
+        cluster_summary_lines = []
+        for cid, stats in sorted(cluster_stats.items()):
+            avg_pitch = round(sum(stats["pitches"]) / len(stats["pitches"]), 1) if stats["pitches"] else 0
+            gender_hint = "/".join(sorted(stats["genders"])) or ("female" if avg_pitch > 160 else "male")
+            cluster_summary_lines.append(f"- {cid}: {stats['count']} lines, Physical Gender: {gender_hint} (Avg Pitch: {avg_pitch}Hz)")
+        cluster_summary_text = "\n".join(cluster_summary_lines)
+
         # Sample first 150 dialogue segments for master dossier analysis
         dossier_sample = segments[: min(150, len(segments))]
         sample_text = "\n".join(
-            [f"[{s['id']}] ({s['speaker_cluster']}): {s['original_text']}" for s in dossier_sample]
+            [f"[{s['id']}] ({s['speaker_cluster']}, {s.get('audio_gender','?')}, {int(s.get('pitch_hz',0))}Hz): {s['original_text']}" for s in dossier_sample]
         )
 
         dossier_prompt = f"""\
 You are an expert anime and short-drama dubbing director in {target_language}.
-Here is the opening dialogue transcript of our Chinese drama:
+Here is the opening dialogue transcript of our Chinese drama, along with acoustic biometric clusters from Alibaba CAM++:
 ---
+ACOUSTIC CLUSTERS DETECTED BY ALIBABA CAM++ & PITCH ANALYSIS:
+{cluster_summary_text}
+
+SAMPLE TRANSCRIPT:
 {sample_text}
 ---
 Analyze the storyline, identify the characters, and establish who is speaking:
 1. DRAMA SYNOPSIS: Summarize the core plot conflict, hero/heroine's goal, and main twists in 3 punchy sentences.
-2. CHARACTER ROSTER: Identify characters from story semantics and dialogue relationships:
+2. CHARACTER ROSTER & CLUSTER MAPPING: Map the CAM++ clusters (spk_X) to the story roles:
    - "hero" (Male Lead / Confident young protagonist - male)
    - "heroine" (Female Lead / Reborn warrior lady - female)
    - "maid" (Maid / Loyal female attendant - female)
@@ -347,7 +370,7 @@ Confirm once you have understood the cast and storyline!
         for b_idx, batch in enumerate(batches, start=1):
             batch_payload = "\n".join(
                 [
-                    f"ID:{s['id']} | DUR:{s['duration']}s | MAX_CHARS:{max(18, int(float(s['duration']) * 14.0))} | SPK:{s['speaker_cluster']} | CHINESE:{s['original_text']}"
+                    f"ID:{s['id']} | DUR:{s['duration']}s | MAX_CHARS:{max(18, int(float(s['duration']) * 14.0))} | AUDIO:{s['speaker_cluster']}({s.get('audio_gender','?')},{int(s.get('pitch_hz',0))}Hz) | EMO:{s.get('detected_emotion','neutral')} | CHINESE:{s['original_text']}"
                     for s in batch
                 ]
             )
@@ -356,14 +379,10 @@ Confirm once you have understood the cast and storyline!
 Translate and adapt the next scene of dialogues (Batch {b_idx}/{len(batches)}, IDs {batch[0]['id']}-{batch[-1]['id']}) into natural spoken {target_language}.
 
 CRITICAL RULES:
-1. SEMANTIC SPEAKER ATTRIBUTION (DO NOT RELY BLINDLY ON SPK CLUSTER):
-   - The raw audio tag (SPK: spk_X) can be imprecise. You MUST determine the true speaker primarily from the meaning and conversational context of the dialogue!
-   - Examples:
-     * When addressing someone as '小姐' (Miss/Lady) or serving her, SPEAKER = "maid" (GENDER = female).
-     * When speaking of returning from 10 years disguised as a man ('你女扮男装替父从军十年'), that is the maid or companion speaking ("maid", female).
-     * When someone says '我这是重生了' (I have been reborn), that is the female lead ("heroine", female).
-     * When commanding soldiers or guarding gates, SPEAKER = "guard" or "hero".
-     * When elder parents speak, SPEAKER = "father" (male) or "mother" (female).
+1. HYBRID BIOMETRIC-SEMANTIC CROSS-VALIDATION:
+   - The AUDIO field provides the physical voice fingerprint (CAM++ cluster, gender, pitch) and EMO provides the emotion from SenseVoice.
+   - SEMANTIC OVERRIDE: When the dialogue text clearly identifies the speaker (e.g. addressing someone as '小姐' -> maid; saying '我这是重生了' -> heroine; commanding soldiers -> guard/hero), semantic truth takes precedence over audio cluster noise!
+   - BIOMETRIC ANCHOR: For short or ambiguous lines (e.g. '快走!', '好的', '等等'), trust the AUDIO cluster to determine the speaker.
    - Allowed SPEAKER values: hero | heroine | maid | guard | villain | father | mother | king | extra_male | extra_female.
 2. SPEAKER CONTINUITY (DO NOT FLIP CHARACTERS MID-SPEECH):
    - When a character is speaking across consecutive dialogue turns or delivering a continuous monologue, KEEP THE SAME SPEAKER!
@@ -371,14 +390,16 @@ CRITICAL RULES:
 3. CHARACTER BUDGET & SPOKEN PACING (MANDATORY):
    - Each dialogue line specifies MAX_CHARS (~14 characters/second).
    - The translated {target_language} text MUST NOT exceed MAX_CHARS! Keep words punchy, dramatic, and concise so the speech fits naturally without fast-forwarding or voice distortion.
-4. NARRATIVE CONTINUITY: Review our ongoing conversation and the previous scene above! Seamlessly continue the flow, emotional momentum, and character dynamics from where we left off.
-5. SPOKEN CASUAL DIALOGUE & TIGHT PHRASING:
+4. ACTING TONE & EMOTION:
+   - Reflect the EMO tag (angry, sad, happy, fearful, neutral) in dialogue phrasing, urgency, and exclamation.
+5. NARRATIVE CONTINUITY: Review our ongoing conversation and the previous scene above! Seamlessly continue the flow, emotional momentum, and character dynamics from where we left off.
+6. SPOKEN CASUAL DIALOGUE & TIGHT PHRASING:
    - Use authentic, engaging spoken language (no archaic Sanskritized or robotic textbook Hindi).
    - Drop filler words, redundant passive constructions, and verbose filler phrases to keep delivery punchy and natural for dubbing.
-6. PRESERVE NEGATIONS & LOGIC EXACTLY:
+7. PRESERVE NEGATIONS & LOGIC EXACTLY:
    - NEVER drop or invert a negative statement into a positive one. If the Chinese source expresses negation ('不', '没', '非', '休', '未', '别'), the {target_language} translation MUST strictly preserve that negation ('नहीं', 'मत', 'कभी नहीं').
-7. EMOTION TAG: Specify one emotion: angry | sarcastic | emotional | crying | laughing | shocked | neutral.
-8. 100% PURE TARGET LANGUAGE: Translate completely into {target_language}. Do NOT leave any Chinese characters, names, or raw honorifics (e.g. adapt '小姐' into 'दीदी/मैडम', '陛下' into 'महाराज', '将军' into 'सेनापति/जनरल').
+8. EMOTION TAG: Specify one emotion: angry | sarcastic | emotional | crying | laughing | shocked | neutral.
+9. 100% PURE TARGET LANGUAGE: Translate completely into {target_language}. Do NOT leave any Chinese characters, names, or raw honorifics (e.g. adapt '小姐' into 'दीदी/मैडम', '陛下' into 'महाराज', '将军' into 'सेनापति/जनरल').
 
 OUTPUT FORMAT:
 | ID | SPEAKER | GENDER | EMOTION | DIALOGUE |

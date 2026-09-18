@@ -42,6 +42,47 @@ def _get_sensevoice_pipeline(device: str = "cuda"):
     return model
 
 
+def estimate_pitch_f0(audio_clip, sr: int = 16000) -> float:
+    """Estimate fundamental vocal frequency (F0 in Hz) using downsampled autocorrelation."""
+    import numpy as np
+
+    if len(audio_clip) < int(sr * 0.15):
+        return 0.0
+    step = max(1, sr // 8000)
+    sig = audio_clip[::step]
+    current_sr = sr // step
+    sig = sig - np.mean(sig)
+    std = np.std(sig)
+    if std < 1e-4:
+        return 0.0
+    sig = sig / std
+
+    min_lag = int(current_sr / 380)
+    max_lag = int(current_sr / 70)
+    if len(sig) <= max_lag:
+        return 0.0
+
+    corr = np.correlate(sig, sig, mode="full")
+    corr = corr[len(sig) - 1 :]
+    search_window = corr[min_lag:max_lag]
+    if len(search_window) == 0:
+        return 0.0
+    peak_idx = np.argmax(search_window) + min_lag
+    peak_val = corr[peak_idx]
+    if corr[0] > 0 and (peak_val / corr[0]) > 0.20:
+        return round(float(current_sr / peak_idx), 1)
+    return 0.0
+
+
+def pitch_to_gender(f0: float) -> str:
+    """Classify physical vocal gender from fundamental pitch F0."""
+    if 65.0 <= f0 <= 160.0:
+        return "male"
+    elif f0 > 160.0:
+        return "female"
+    return "unknown"
+
+
 def transcribe_chinese_vocals(
     vocals_path: str,
     output_json_path: str,
@@ -138,8 +179,29 @@ def transcribe_chinese_vocals(
     for idx, seg in enumerate(consolidated):
         seg["id"] = idx
 
+    # Measure physical pitch F0 and acoustic voice gender for each dialogue segment
+    try:
+        import soundfile as sf
+        audio_data, sr = sf.read(vocals_path)
+        if audio_data.ndim > 1:
+            audio_data = audio_data.mean(axis=1)
+
+        for seg in consolidated:
+            st_idx = max(0, int(seg["start"] * sr))
+            et_idx = min(len(audio_data), int(seg["end"] * sr))
+            clip = audio_data[st_idx:et_idx]
+            f0 = estimate_pitch_f0(clip, sr=sr)
+            gender = pitch_to_gender(f0)
+            seg["pitch_hz"] = f0
+            seg["audio_gender"] = gender
+    except Exception as e:
+        log.warning("Could not compute acoustic pitch for segments: %s", e)
+        for seg in consolidated:
+            seg["pitch_hz"] = 0.0
+            seg["audio_gender"] = "unknown"
+
     log.info(
-        "Transcription complete: extracted %d raw -> %d natural dialogue turns.",
+        "Transcription complete: extracted %d raw -> %d natural dialogue turns with biometric pitch.",
         len(segments),
         len(consolidated),
     )
