@@ -372,9 +372,13 @@ CRITICAL RULES:
    - Each dialogue line specifies MAX_CHARS (~14 characters/second).
    - The translated {target_language} text MUST NOT exceed MAX_CHARS! Keep words punchy, dramatic, and concise so the speech fits naturally without fast-forwarding or voice distortion.
 4. NARRATIVE CONTINUITY: Review our ongoing conversation and the previous scene above! Seamlessly continue the flow, emotional momentum, and character dynamics from where we left off.
-5. SPOKEN CASUAL DIALOGUE: Use authentic, engaging spoken language (no archaic Sanskritized or robotic textbook Hindi).
-6. EMOTION TAG: Specify one emotion: angry | sarcastic | emotional | crying | laughing | shocked | neutral.
-7. 100% PURE TARGET LANGUAGE: Translate completely into {target_language}. Do NOT leave any Chinese characters, names, or raw honorifics (e.g. adapt '小姐' into 'दीदी/मैडम', '陛下' into 'महाराज', '将军' into 'सेनापति/जनरल').
+5. SPOKEN CASUAL DIALOGUE & TIGHT PHRASING:
+   - Use authentic, engaging spoken language (no archaic Sanskritized or robotic textbook Hindi).
+   - Drop filler words, redundant passive constructions, and verbose filler phrases to keep delivery punchy and natural for dubbing.
+6. PRESERVE NEGATIONS & LOGIC EXACTLY:
+   - NEVER drop or invert a negative statement into a positive one. If the Chinese source expresses negation ('不', '没', '非', '休', '未', '别'), the {target_language} translation MUST strictly preserve that negation ('नहीं', 'मत', 'कभी नहीं').
+7. EMOTION TAG: Specify one emotion: angry | sarcastic | emotional | crying | laughing | shocked | neutral.
+8. 100% PURE TARGET LANGUAGE: Translate completely into {target_language}. Do NOT leave any Chinese characters, names, or raw honorifics (e.g. adapt '小姐' into 'दीदी/मैडम', '陛下' into 'महाराज', '将军' into 'सेनापति/जनरल').
 
 OUTPUT FORMAT:
 | ID | SPEAKER | GENDER | EMOTION | DIALOGUE |
