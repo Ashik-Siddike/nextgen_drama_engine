@@ -1,0 +1,56 @@
+{
+  "target_language": "Hindi",
+  "browser": {
+    "chatgpt_url": "https://chatgpt.com",
+    "cdp_url": "http://localhost:9222",
+    "profile_dir": "storage/browser_profile",
+    "headless": false,
+    "timeout_sec": 180,
+    "batch_dialogue_count": 45
+  },
+  "asr": {
+    "engine": "sensevoice",
+    "device": "cuda",
+    "source_language": "zh"
+  },
+  "audio_separation": {
+    "model": "htdemucs",
+    "device": "cuda",
+    "chunk_sec": 120
+  },
+  "tts": {
+    "engine": "edge-tts",
+    "default_voice": "hi-IN-MadhurNeural",
+    "atempo_min": 0.90,
+    "atempo_max": 1.35,
+    "concurrency": 4,
+    "f5_tts": {
+      "model_name": "F5TTS_Small",
+      "ckpt_file": "../one_drama_engine/models/f5_hindi/model_2500000.safetensors",
+      "vocab_file": "../one_drama_engine/models/f5_hindi/vocab.txt",
+      "ref_audio_path": "../one_drama_engine/storage/voice_reference/ravi_gupta.wav",
+      "ref_text": "उन्होंने बहुत कम रखा, दो तीन हजार पर बात फसी हुई थी और उनका जो मटेरियल था, वो प्रीमियम नहीं था।",
+      "device": "cuda"
+    }
+  },
+  "video_composition": {
+    "chunk_minutes": 5,
+    "bottom_subtitle_treatment": "feathered_gaussian",
+    "glassmorphism_color": "white",
+    "glassmorphism_opacity": 0.50,
+    "glassmorphism_blur": 16,
+    "burn_subtitles": true,
+    "codec": "h264_nvenc",
+    "fallback_codec": "libx264",
+    "crf": 20,
+    "preset": "veryfast"
+  },
+  "storage_paths": {
+    "raw": "storage/raw",
+    "audio": "storage/audio",
+    "transcripts": "storage/transcripts",
+    "scripts": "storage/scripts",
+    "tts": "storage/tts",
+    "output": "storage/output"
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "roles": {
+    "king": {
+      "display_name": "Emperor / King / Royal Monarch (सम्राट/राजा)",
+      "gender": "male",
+      "edge_voice": "hi-IN-MadhurNeural",
+      "edge_pitch": "-18Hz",
+      "edge_rate": "-2%",
+      "description": "Authoritative, majestic, royal male emperor/king on the throne"
+    },
+    "hero": {
+      "display_name": "Hero / Male Lead (नायक)",
+      "gender": "male",
+      "edge_voice": "hi-IN-MadhurNeural",
+      "edge_pitch": "+0Hz",
+      "edge_rate": "+0%",
+      "description": "Confident, bold young male protagonist"
+    },
+    "heroine": {
+      "display_name": "Heroine / Female Lead (নায়িকা)",
+      "gender": "female",
+      "edge_voice": "hi-IN-SwaraNeural",
+      "edge_pitch": "+12Hz",
+      "edge_rate": "+4%",
+      "description": "Sweet, expressive young female lead"
+    },
+    "villain": {
+      "display_name": "Villain / Antagonist (ভিলেন)",
+      "gender": "male",
+      "edge_voice": "hi-IN-MadhurNeural",
+      "edge_pitch": "-30Hz",
+      "edge_rate": "-4%",
+      "description": "Deep, sinister, threatening antagonist"
+    },
+    "father": {
+      "display_name": "Father / Elder Patriarch (বাবা/পিতা)",
+      "gender": "male",
+      "edge_voice": "hi-IN-MadhurNeural",
+      "edge_pitch": "-22Hz",
+      "edge_rate": "-6%",
+      "description": "Mature, authoritative elder male"
+    },
+    "mother": {
+      "display_name": "Mother / Elder Matriarch (মা/মাতা)",
+      "gender": "female",
+      "edge_voice": "hi-IN-SwaraNeural",
+      "edge_pitch": "-20Hz",
+      "edge_rate": "-5%",
+      "description": "Warm, caring or strict elder female"
+    },
+    "extra_male": {
+      "display_name": "Common Male / Guards / Bystanders (কমন পুরুষ)",
+      "gender": "male",
+      "edge_voice": "hi-IN-MadhurNeural",
+      "edge_pitch": "+0Hz",
+      "edge_rate": "+0%",
+      "description": "Natural everyday common male voice"
+    },
+    "extra_female": {
+      "display_name": "Common Female / Maids / Passerby (কমন নারী)",
+      "gender": "female",
+      "edge_voice": "hi-IN-SwaraNeural",
+      "edge_pitch": "+0Hz",
+      "edge_rate": "+0%",
+      "description": "Natural everyday common female voice"
+    },
+    "maid": {
+      "display_name": "Maid / Female Attendant (পরিচারিকা/দাসী)",
+      "gender": "female",
+      "edge_voice": "hi-IN-SwaraNeural",
+      "edge_pitch": "+6Hz",
+      "edge_rate": "+2%",
+      "description": "Polite, loyal or emotional female attendant/maid"
+    },
+    "guard": {
+      "display_name": "Guard / Soldier / General (সৈনিক/প্রহরী)",
+      "gender": "male",
+      "edge_voice": "hi-IN-MadhurNeural",
+      "edge_pitch": "-10Hz",
+      "edge_rate": "+2%",
+      "description": "Disciplined, strong male guard or soldier"
+    }
+  }
+}
